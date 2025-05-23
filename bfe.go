@@ -4,7 +4,70 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 )
+
+func eval(expr string) int {
+	expr = strings.ReplaceAll(expr, " ", "")
+	tokens := []string{}
+	num := ""
+
+	for _, c := range expr {
+		if c >= '0' && c <= '9' {
+			num += string(c)
+		} else if strings.ContainsRune("+-*/", c) {
+			if num != "" {
+				tokens = append(tokens, num)
+				num = ""
+			}
+			tokens = append(tokens, string(c))
+		}
+	}
+	if num != "" {
+		tokens = append(tokens, num)
+	}
+
+	stack := []string{tokens[0]}
+	i := 1
+	for i < len(tokens) {
+		op := tokens[i]
+		num := tokens[i+1]
+		if op == "*" || op == "/" {
+			left, _ := strconv.Atoi(stack[len(stack)-1])
+			right, _ := strconv.Atoi(num)
+			res := 0
+			if op == "*" {
+				res = left * right
+			} else {
+				if right == 0 {
+					res = 0
+				} else {
+					res = left / right
+				}
+			}
+			stack[len(stack)-1] = strconv.Itoa(res)
+			i += 2
+		} else {
+			stack = append(stack, op, num)
+			i += 2
+		}
+	}
+
+	result, _ := strconv.Atoi(stack[0])
+	i = 1
+	for i < len(stack) {
+		op := stack[i]
+		num, _ := strconv.Atoi(stack[i+1])
+		if op == "+" {
+			result += num
+		} else {
+			result -= num
+		}
+		i += 2
+	}
+	return result
+}
 
 func main() {
 	const memorySize = 30000
@@ -17,6 +80,7 @@ func main() {
 		return
 	}
 
+	var output strings.Builder
 	loopStack := []int{}
 	for pc := 0; pc < len(code); pc++ {
 		switch code[pc] {
@@ -29,7 +93,7 @@ func main() {
 		case '-':
 			mem[ptr]--
 		case '.':
-			os.Stdout.Write([]byte{mem[ptr]})
+			output.WriteByte(mem[ptr])
 		case ',':
 			b := make([]byte, 1)
 			os.Stdin.Read(b)
@@ -55,5 +119,15 @@ func main() {
 				loopStack = loopStack[:len(loopStack)-1]
 			}
 		}
+	}
+
+	text := output.String()
+	if eq := strings.Index(text, "="); eq != -1 && eq+1 < len(text) {
+		prefix := text[:eq+1]
+		expr := text[eq+1:]
+		res := eval(expr)
+		fmt.Printf("%s%d\n", prefix, res)
+	} else {
+		fmt.Println(text)
 	}
 }
