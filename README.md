@@ -4,7 +4,7 @@ Este projeto é um compilador em Go que transforma expressões do tipo `AÇÃO=1
 
 - Strings UTF-8 (como "AÇÃO")
 - Expressões aritméticas com `+`, `-`, `*`, `/`
-- Impressão correta de múltiplos dígitos (ex: `47`)
+- Impressão correta de múltiplos dígitos
 - Interpretação e execução com máquina virtual própria
 
 ---
